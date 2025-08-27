@@ -1,6 +1,6 @@
 #!/bin/bash
 
-UID = $(shell id -u)
+UID := $(shell id -u)
 DOCKER_BE = symfony-course-skeleton-app
 
 help: ## Show this help message
@@ -15,7 +15,7 @@ start: ## Start the containers
 	U_ID=${UID} docker-compose up -d
 
 stop: ## Stop the containers
-	U_ID=${UID} docker-compose stop
+	U_ID=${UID} docker-compose stop 
 
 restart: ## Restart the containers
 	$(MAKE) stop && $(MAKE) start
@@ -29,7 +29,7 @@ prepare: ## Runs backend commands
 	$(MAKE) composer-install
 
 run: ## starts the Symfony development server in detached mode
-	U_ID=${UID} docker exec -it --user ${UID} ${DOCKER_BE} symfony serve -d
+	U_ID=${UID} docker exec -it --user ${UID} ${DOCKER_BE} symfony serve -d --allow-all-ip --no-tls --port=8000
 
 logs: ## Show Symfony logs in real time
 	U_ID=${UID} docker exec -it --user ${UID} ${DOCKER_BE} symfony server:log

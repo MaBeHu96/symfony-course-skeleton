@@ -1,0 +1,33 @@
+FROM php:8.0-fpm
+
+ARG UID
+
+# Crear usuario no root
+RUN adduser -u ${UID} --disabled-password --gecos "" appuser \
+    && mkdir /home/appuser/.ssh \
+    && chown -R appuser:appuser /home/appuser/ \
+    && echo "StrictHostKeyChecking no" >> /home/appuser/.ssh/config \
+    && echo "alias sf=/appdata/www/bin/console" >> /home/appuser/.bashrc
+
+# Instalar dependencias
+RUN apt update \
+    && apt install -y git acl openssl openssh-client wget zip unzip libpng-dev zlib1g-dev libzip-dev libxml2-dev libicu-dev \
+    && docker-php-ext-install intl pdo_mysql zip \
+    && pecl install xdebug apcu \
+    && docker-php-ext-enable --ini-name 05-opcache.ini opcache xdebug apcu
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Symfony CLI
+RUN wget https://github.com/symfony-cli/symfony-cli/releases/latest/download/symfony_linux_amd64.gz -O /tmp/symfony.gz \
+    && gunzip /tmp/symfony.gz \
+    && mv /tmp/symfony /usr/local/bin/symfony \
+    && chmod +x /usr/local/bin/symfony
+
+# Configuración de Xdebug
+COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+
+WORKDIR /appdata/www
+
+USER appuser
